@@ -1,0 +1,112 @@
+#!bin/bash
+#Menu for driving git
+init(){
+	echo "enter project name"
+	read name
+	git init $name
+}
+
+add(){
+	echo "enter name"
+	read name
+	git add $name
+}
+
+status(){
+	git status
+}
+
+commit(){
+	echo "enter message"
+	reag msg
+	git commit -m $msg
+}
+
+pull() {
+	git pull origin
+}
+
+push() {
+	git push origin
+}
+
+clone(){
+	echo "insert url"
+	read url
+	echo "select path"
+	read path
+	git clone $url $path
+}
+
+#brancheManage subfunction
+showBranch(){
+	git branch
+}
+
+newBranch(){
+	echo "enter the name for new branche"
+	read name
+	git branch $name
+}
+
+switchBranch(){
+	echo "enter name branche"
+	read name
+	git checkout $name
+}
+
+branchManage(){
+echo -e "select action:\n1.show\n2.new\n3.add"
+read action
+case $action in
+	1)
+	showBranch
+	;;
+	2)
+	newBranch
+	;;
+	3)
+	switchBranch
+	;;
+esac
+}
+
+echo "enter path"
+read path
+echo $path
+cd $path
+echo -e "select action:\n1.init\n2.add\n3.status\n4.commit\n5.pull\n6.push\n7.clone\n8.branch"
+read action
+case $action in
+	1)
+	echo "init"
+	init
+	;;
+	2)
+	echo "add"
+	add
+	;;
+	3)
+	echo "status"
+	status
+	;;
+	4)
+	echo "commit"
+	commit
+	;;
+	5)
+	echo "pull"
+	pull
+	;;
+	6)
+	echo "push"
+	push
+	;;
+	7)
+	echo "clone"
+	clone
+	;;
+	8)
+	branchManage
+	;;
+esac

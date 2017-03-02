@@ -1,0 +1,33 @@
+#!/bin/bash
+set -o nounset
+set -o errexit
+echo "Enter path:"
+read path1
+echo "Enter the numeber"
+read folnum
+echo "Enter name for folders"
+read folder
+echo "Enter number subfolders"
+read sfolnum
+echo "Enter name for subfolders"
+read subfolder
+echo "Enter number files"
+read filesnum
+echo "Enter name for files"
+read file
+for((i = 0; i<$folnum; i++))
+do
+mkdir $folder$i
+for((j=0; j<$sfolnum; j++))
+do
+mkdir $path1/$folder$i/$subfolder$j
+for((k=0; k<filesnum; k++))
+do
+touch $path1/$folder$i/$subfolder$j/$file$k
+done
+done
+done
+echo "Finish"
+exit
+
+

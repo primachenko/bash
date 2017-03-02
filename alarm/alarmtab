@@ -1,0 +1,3 @@
+DISPLAY=:0
+#run-parts
+13 13 * * * mplayer ~/scripts/alarm/sound.mp3

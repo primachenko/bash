@@ -1,0 +1,67 @@
+#!bin/bash
+show() {
+ 	length=$(echo -e "$length" | sed -n '$=' alarmtab)
+	if [[ $length == 2 ]]
+	then
+		echo "alarm not found"
+	else
+		echo "list of alarms:"|
+                sed -n '3,$p' alarmtab
+	fi
+}
+add() {
+	echo -e "add an alarm\nenter the hour:"
+	read hour
+	echo "minute:"
+	read min
+	echo "date(everyday *):"
+	read date
+	echo "$min $hour $date * * mplayer ~/scripts/alarm/sound.mp3" >> alarmtab
+	crontab alarmtab
+	show
+}
+edit() {
+	show
+	echo "select alarm for editing:"
+	read edStr
+	let 'edStr += 2'
+	echo -e "add an alarm\nenter the hour:"
+        read hour
+        echo "minute:"
+        read min
+        echo "date(everyday *):"
+        read date
+        echo "$min $hour $date * * mplayer ~/scripts/alarm/sound.mp3" >> alarmtab
+	sed -i "${edStr} d" alarmtab
+        show
+	crontab alarmtab
+}
+remove() {
+	show
+	echo "select alarm for removing:"
+	read remStr
+	let 'remStr += 2'
+	sed -i "${remStr} d" alarmtab
+	crontab alarmtab
+	show
+}
+echo -e "Select action:
+1. Show alarm list
+2. Add alarm
+3. Edit alarm
+4. Remove alarm"
+read action
+case $action in
+	1)
+		show
+		;;
+	2)
+		add
+		;;
+	3)
+		edit
+		;;
+	4)
+		remove
+		;;
+esac
