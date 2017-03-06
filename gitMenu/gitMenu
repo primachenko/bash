@@ -31,7 +31,7 @@ create(){
 	read name
 	echo "enter url"
 	read url
-	git add $name $url
+	git remote add $name $url
 	;;
 esac
 }
@@ -64,7 +64,7 @@ esac
 }
 #status, switch branch, remote repo
 edit(){
-	echo -e "select the action\n1.switch branch\n2.status\n3.show remote repo"
+	echo -e "select the action\n1.switch branch\n2.status\n3.show remote repo\n4.show remote"
 	read action
 	case $action in
 	1)
@@ -77,6 +77,9 @@ edit(){
 	;;
 	3)
 	git remote
+	;;
+	4)
+	git remote -v
 	;;
 esac
 }
@@ -91,13 +94,19 @@ content(){
 	git fetch $url
 	;;
 	2)
-	git pull $url
+	echo "enter name branch"
+	read name
+	git pull $url $name
 	;;
 	3)
-	git push $url
+	echo "enter the name branch for push"
+	read name
+	git push $url $name
 	;;
 	4)
-	git clone $url
+	echo "enter the name for cloning repo"
+	read name
+	git clone $url $name
 	;;
 esac
 }
