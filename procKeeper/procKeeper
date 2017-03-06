@@ -1,0 +1,100 @@
+#!/bin/bash
+min=0;
+hours=0;
+convert(){
+	let "var=$1"
+#TODO	let "var=$(($var+$(date +%M)))"
+	echo $var
+#	if [[ $var -ge 60 ]]
+#	then
+#	while(($var > 60))
+#	do
+#	let "var -= 60"
+#	let "hour += 1"
+#	done
+#	let "min = $var"
+#	fi
+}
+
+create() {
+	echo "Введите имя отслеживаемого процесса"
+	read name
+	echo "Выберите период проверки (в минутах)"
+	read time
+	convert
+	touch tab.tmp
+        echo "DISPLAY:=0
+$time * * * * bash ~/scripts/bash/procKeeper/procKeeper $name" >> tab.tmp
+        crontab tab.tmp
+	rm -rf tab.tmp
+}
+#DONE
+track(){
+	#flag=$(pidof $per)
+	#echo $flag
+	if [[ $(pidof $per) > 1 ]]
+	then
+	echo "Процесс есть"
+	else
+	echo "Процесса нет"
+	$per
+	fi
+}
+
+show(){
+	length=$(echo -e "$length" | sed -n '$=' alarmtab)
+        if [[ $length == 2 ]]
+        then
+                echo "alarm not found"
+        else
+                echo "list of alarms:"|
+                sed -n '3,$p' alarmtab
+        fi
+}
+
+edit(){
+	show
+        echo "select alarm for editing:"
+        read edStr
+        let 'edStr += 2'
+        echo -e "add an alarm\nenter the hour:"
+        read hour
+        echo "minute:"
+        read min
+        echo "date(everyday *):"
+        read date
+        echo "$min $hour $date * * mplayer ~/scripts/alarm/sound.mp3" $
+        sed -i "${edStr} d" alarmtab
+        show
+        crontab alarmtab
+}
+
+remove(){
+	show
+        echo "select alarm for removing:"
+        read remStr
+        let 'remStr += 2'
+        sed -i "${remStr} d" alarmtab
+        crontab alarmtab
+        show
+}
+per=$1
+if [[ $1 == "" ]]
+then
+#Запуск гуя
+echo -e "1.Создать\n2.Редактировать\n3.Удалить"
+read action
+case $action in
+	1)
+	create
+	;;
+	2)
+	edit
+	;;
+	3)
+	remove
+	;;
+esac
+else
+	track
+fi
