@@ -1,84 +1,68 @@
 #!/bin/bash
-min=0;
-hours=0;
-#DONE
+sync(){
+	echo "sync"
+}
 create() {
 	echo "Введите имя отслеживаемого процесса"
 	read name
 	echo "Выберите период проверки (в минутах)"
 	read time
 	touch tab.tmp
-        echo "DISPLAY=:0
-*/$time * * * * bash /home/oleg/scripts/bash/procKeeper/procKeeper $name" >> tab.tmp
-        crontab tab.tmp
-	rm -rf tab.tmp
+	if [[ $(sed -n '$=' tab.tmp) -le 1 ]]
+		then
+		echo "DISPLAY=:0" > tab.tmp
+	fi
+    echo "*/$time * * * * bash /home/oleg/scripts/bash/procKeeper/procKeeper $name" >> tab.tmp
+    crontab tab.tmp
+    show
 }
-#DONE
 track(){
 	if [[ $(pidof $per) > 1 ]]
-	then
-	echo "Процесс есть"
+		then
+		echo "Процесс есть"
 	else
-	echo "Процесса нет"
-	$per
+		echo "Процесса нет"
+		$per
 	fi
 }
-#TODO
 show(){
-	length=$(echo -e "$length" | sed -n '$=' alarmtab)
-        if [[ $length == 2 ]]
-        then
-                echo "alarm not found"
-        else
-                echo "list of alarms:"|
-                sed -n '3,$p' alarmtab
-        fi
+	crontab -l | sed -n /procKeeper/p
+	#cat tab.tmp | sed -n `2,$p`
 }
-#TODO
 edit(){
 	show
-        echo "select alarm for editing:"
-        read edStr
-        let 'edStr += 2'
-        echo -e "add an alarm\nenter the hour:"
-        read hour
-        echo "minute:"
-        read min
-        echo "date(everyday *):"
-        read date
-        echo "$min $hour $date * * mplayer ~/scripts/alarm/sound.mp3" $
-        sed -i "${edStr} d" alarmtab
-        show
-        crontab alarmtab
+	remove
+	create
 }
-#TODO
 remove(){
 	show
-        echo "select alarm for removing:"
-        read remStr
-        let 'remStr += 2'
-        sed -i "${remStr} d" alarmtab
-        crontab alarmtab
-        show
+	echo "Выберите отслеживание для удаления:"
+	read num
+	#crontab -l | sed -n '/procKeeper/p' | sed -n "/${num}/p"
+	let "num+=1"
+	sed -i "${num} d" tab.tmp
+	crontab tab.tmp
+	show
 }
-
-
 per=$1
 if [[ $1 == "" ]]
-then
-echo -e "1.Создать\n2.Редактировать\n3.Удалить"
-read action
-case $action in
-	1)
-	create
-	;;
-	2)
-	edit
-	;;
-	3)
-	remove
-	;;
-esac
+	then
+	echo -e "1.Создать\n2.Редактировать\n3.Удалить\n4.Показать"
+	read action
+	case $action in
+		1)
+			create
+			;;
+		2)
+			edit
+			;;
+		3)
+			remove
+			;;
+		4)
+			show
+			;;
+	esac
 else
 	track
 fi
