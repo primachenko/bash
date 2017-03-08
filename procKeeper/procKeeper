@@ -1,13 +1,17 @@
 #!/bin/bash
 sync(){
-	echo "sync"
+	touch tab.tmp
+	crontab -l > tab.tmp
+}
+clr(){
+	touch tab.tmp
+	rm -rf tab.tmp
 }
 create() {
 	echo "Введите имя отслеживаемого процесса"
 	read name
 	echo "Выберите период проверки (в минутах)"
 	read time
-	touch tab.tmp
 	if [[ $(sed -n '$=' tab.tmp) -le 1 ]]
 		then
 		echo "DISPLAY=:0" > tab.tmp
@@ -15,40 +19,60 @@ create() {
     echo "*/$time * * * * bash /home/oleg/scripts/bash/procKeeper/procKeeper $name" >> tab.tmp
     crontab tab.tmp
     show
+    clr
 }
 track(){
 	if [[ $(pidof $per) > 1 ]]
 		then
-		echo "Процесс есть"
+		exit
 	else
-		echo "Процесса нет"
 		$per
 	fi
 }
 show(){
-	crontab -l | sed -n /procKeeper/p
-	#cat tab.tmp | sed -n `2,$p`
-}
+	if [[ $(crontab -l | grep procKeeper | wc -l) -eq 0 ]]
+	then
+		echo "Нет активных отслеживаний"
+	else	
+		crontab -l | sed -n '/procKeeper/p; =' | sed 'N;s/\n/. /' | sed '$d'
+	fi
+	}
 edit(){
 	show
-	remove
-	create
+	echo "Выберите отслеживание для удаления"
+	read num
+	VAR=`crontab -l | sed -n '/procKeeper/p' | sed "${num} !d" | sed 's/^\(.\)/\1\\\/' | cut -c 1-6`
+	sed -i "/${VAR}/d" tab.tmp;
+	echo "Введите имя отслеживаемого процесса"
+	read name
+	echo "Выберите период проверки (в минутах)"
+	read time
+	if [[ $(sed -n '$=' tab.tmp) -le 1 ]]
+		then
+		echo "DISPLAY=:0" > tab.tmp
+	fi
+    echo "*/$time * * * * bash /home/oleg/scripts/bash/procKeeper/procKeeper $name" >> tab.tmp
+    crontab tab.tmp
+    show
+    clr
 }
+
 remove(){
 	show
-	echo "Выберите отслеживание для удаления:"
+	echo "Выберите отслеживание для удаления"
 	read num
-	#crontab -l | sed -n '/procKeeper/p' | sed -n "/${num}/p"
-	let "num+=1"
-	sed -i "${num} d" tab.tmp
+	VAR=`crontab -l | sed -n '/procKeeper/p' | sed "${num} !d" | sed 's/^\(.\)/\1\\\/' | cut -c 1-6`
+	sed -i "/${VAR}/d" tab.tmp;
 	crontab tab.tmp
 	show
+	clr
 }
 per=$1
 if [[ $1 == "" ]]
 	then
 	echo -e "1.Создать\n2.Редактировать\n3.Удалить\n4.Показать"
 	read action
+	sync
 	case $action in
 		1)
 			create
