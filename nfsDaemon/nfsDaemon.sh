@@ -37,17 +37,33 @@ insConf(){
 	echo "$IP\n$pathServ\n$pathLocal" > ~/var/conf
 }
 
-imprint(){
-	echo 0
+uptime(){
+	if !([ -f $path2/nfs.log ])
+	then
+		touch $path2/nfs.log
+		uptime="NaN"
+	else
+		date1=`cat $path2/nfs.log | grep ':' | tail -1 | sed -n 1p`
+		date2=`date +%H":"%M" "%D`
+		uptime=$((`date -d "$date2" '+%m'` - `date -d "$date1" '+%m'`))
+	fi 
+}
+
+imprintC(){
+	echo "`date +%H":"%M" "%D`\nThe $USER with the address $address has connected." >> $path2/nfs.log
+}
+imprintD(){
+	uptime
+	echo "`date +%H":"%M" "%D`\nThe $USER with the address $address has disconnected. Uptime was $uptime min" >> $path2/nfs.log
 }
 readConf
 case "$1" in
 	start)	
 		sudo mount -t nfs ${address}:${path1} ${path2}
-		imprint
+		imprintC
 		;;
 	stop)	
-		imprint
+		imprintD
 		sudo umount -l $path2
         ;;
 	restart) 
@@ -57,7 +73,18 @@ case "$1" in
 	settings)
 		insConf
 		;;
-	*)	log_action_msg "Usage: /etc/init.d/nfsDaemon {start|stop|restart|setting}"
+	t)
+		uptime
+		;;
+	init)
+		chmod +x ./nfsDaemon.sh
+		cp ./nfsDaemon /etc/init.d
+		update-rc.d nfsDaemon.sh defaults
+		;;
+	remove)
+		update-rc.d -f nfsDaemon.sh remove
+		;;
+	*)	log_action_msg "Используйте: /etc/init.d/nfsDaemon {start|stop|restart|setting|init|remove}"
         exit 2
         ;;
 esac
