@@ -5,10 +5,10 @@ if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
 fi
 ### BEGIN INIT INFO
 # Provides:          nfsDaemon
-# Required-Start:    $remote_fs $syslog
-# Required-Stop:     $remote_fs $syslog
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     1 2 3 4 5
+# Default-Stop:      0
 # Short-Description: Example initscript
 # Description:       This file should be used to construct scripts to be
 #                    placed in /etc/init.d.  This example start a
@@ -18,16 +18,17 @@ fi
 #                    override the defaults in /lib/init/init-d-script.
 ### END INIT INFO
 
-DESC="Description of the service"
-DAEMON=/usr/sbin/daemonexecutablename
-
 readConf(){
 	if [ -f ~/var/conf ]
 	then
 		address=`sed -n 1p ~/var/conf`
 		path1=`sed -n 2p ~/var/conf`
 		path2=`sed -n 3p ~/var/conf`
-	fi
+	else
+		address=0
+		path1=0
+		path2=0
+	fi	
 }
 
 insConf(){
@@ -45,13 +46,14 @@ uptime(){
 	else
 		date1=`cat $path2/nfs.log | grep ':' | tail -1 | sed -n 1p`
 		date2=`date +%H":"%M" "%D`
-		uptime=$((`date -d "$date2" '+%m'` - `date -d "$date1" '+%m'`))
+		uptime=$((`date -d "$date2" '+%M'` - `date -d "$date1" '+%M'`))
 	fi 
 }
 
 imprintC(){
 	echo "`date +%H":"%M" "%D`\nThe $USER with the address $address has connected." >> $path2/nfs.log
 }
+
 imprintD(){
 	uptime
 	echo "`date +%H":"%M" "%D`\nThe $USER with the address $address has disconnected. Uptime was $uptime min" >> $path2/nfs.log
@@ -73,18 +75,7 @@ case "$1" in
 	settings)
 		insConf
 		;;
-	t)
-		uptime
-		;;
-	init)
-		chmod +x ./nfsDaemon.sh
-		cp ./nfsDaemon /etc/init.d
-		update-rc.d nfsDaemon.sh defaults
-		;;
-	remove)
-		update-rc.d -f nfsDaemon.sh remove
-		;;
-	*)	log_action_msg "Используйте: /etc/init.d/nfsDaemon {start|stop|restart|setting|init|remove}"
+	*)	log_action_msg "Используйте: /etc/init.d/nfsDaemon {start|stop|restart|setting}"
         exit 2
         ;;
 esac
