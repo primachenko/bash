@@ -7,8 +7,8 @@ fi
 # Provides:          nfsDaemon
 # Required-Start:    $all
 # Required-Stop:     $all
-# Default-Start:     1 2 3 4 5
-# Default-Stop:      0
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
 # Short-Description: Example initscript
 # Description:       This file should be used to construct scripts to be
 #                    placed in /etc/init.d.  This example start a
@@ -42,25 +42,31 @@ uptime(){
 	if !([ -f $path2/nfs.log ])
 	then
 		touch $path2/nfs.log
-		uptime="NaN"
+		upH="NaN"
+		upM="NaN"
+		upS="NaN"
 	else
 		date1=`cat $path2/nfs.log | grep ':' | tail -1 | sed -n 1p`
-		date2=`date +%H":"%M" "%D`
-		uptime=$((`date -d "$date2" '+%M'` - `date -d "$date1" '+%M'`))
+		date2=`date +%H":"%M":"%S" "%D`
+		upH=$((`date -d "$date2" '+%H'` - `date -d "$date1" '+%H'`))
+		upM=$((`date -d "$date2" '+%M'` - `date -d "$date1" '+%M'`))
+		upS=$((`date -d "$date2" '+%S'` - `date -d "$date1" '+%S'`))
 	fi 
 }
 
 imprintC(){
-	echo "`date +%H":"%M" "%D`\nThe $USER with the address $address has connected." >> $path2/nfs.log
+	echo "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has connected." >> $path2/nfs.log
 }
 
 imprintD(){
 	uptime
-	echo "`date +%H":"%M" "%D`\nThe $USER with the address $address has disconnected. Uptime was $uptime min" >> $path2/nfs.log
+	echo "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has disconnected. Uptime was ${upH}:${upM}:${upS}" >> $path2/nfs.log
 }
 readConf
 case "$1" in
 	start)	
+		rm -rf $path2
+		mkdir $path2
 		sudo mount -t nfs ${address}:${path1} ${path2}
 		imprintC
 		;;
@@ -70,7 +76,7 @@ case "$1" in
         ;;
 	restart) 
 		$0 stop
-		$0 start
+		$0 startc
         ;;
 	settings)
 		insConf
