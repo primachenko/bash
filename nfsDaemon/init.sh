@@ -1,4 +1,4 @@
 #!/bin/bash
-sudo cp nfsDaemon /usr/sbin
-sudo cp nfsDaemon /etc/init.d
-sudo update-rc.d nfsDaemon start 95 2 3 4 5 . stop 5 0 1 6 .
+sudo cp $1 /etc/init.d
+sudo chmod +x /etc/init.d/$1
+sudo update-rc.d $1 defaults

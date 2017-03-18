@@ -5,8 +5,8 @@ if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
 fi
 ### BEGIN INIT INFO
 # Provides:          nfsDaemon
-# Required-Start:    $all
-# Required-Stop:     $all
+# Required-Start:    $remote_fs $network
+# Required-Stop:     $remote_fs $network
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Example initscript
@@ -57,11 +57,11 @@ case "$1" in
 		rm -rf $path2
 		mkdir $path2
 		sudo mount -t nfs ${address}:${path1} ${path2}
-		sudo echo -e "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has connected." >> ${path2}/nfs.log
+		echo "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has connected." >> ${path2}/nfs.log
 		;;
 	stop)	
 		uptime
-		sudo echo -e "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has disconnected. Uptime was ${upS} sec" >> ${path2}/nfs.log
+		echo "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has disconnected. Uptime was ${upS} sec" >> ${path2}/nfs.log
 		sudo umount -l $path2
         ;;
 	restart) 
