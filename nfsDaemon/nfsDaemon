@@ -19,15 +19,16 @@ fi
 ### END INIT INFO
 
 readConf(){
-	if [ -f ~/var/conf ]
+	if [ -f /home/oleg/var/conf ]
 	then
-		address=`sed -n 1p ~/var/conf`
-		path1=`sed -n 2p ~/var/conf`
-		path2=`sed -n 3p ~/var/conf`
+		address=`sed -n 1p /home/oleg/var/conf`
+		path1=`sed -n 2p  /home/oleg/var/conf`
+		path2=`sed -n 3p  /home/oleg/var/conf`
 	else
-		address=0
-		path1=0
-		path2=0
+		address=""
+		path1=""
+		path2=""
+		insConf
 	fi	
 }
 
@@ -35,48 +36,37 @@ insConf(){
 	IP=$(whiptail --title "settings" --inputbox "Введите IP сервера" 10 60 $address 3>&1 1>&2 2>&3)
 	pathServ=$(whiptail --title "settings" --inputbox "Введите путь к общедоступной папке" 10 60 $path1 3>&1 1>&2 2>&3)
 	pathLocal=$(whiptail --title "settings" --inputbox "Введите точку монтирования" 10 60 $path2 3>&1 1>&2 2>&3)
-	echo "$IP\n$pathServ\n$pathLocal" > ~/var/conf
+	echo "$IP\n$pathServ\n$pathLocal">/home/oleg/var/conf
 }
 
 uptime(){
 	if !([ -f $path2/nfs.log ])
 	then
 		touch $path2/nfs.log
-		upH="NaN"
-		upM="NaN"
 		upS="NaN"
 	else
 		date1=`cat $path2/nfs.log | grep ':' | tail -1 | sed -n 1p`
 		date2=`date +%H":"%M":"%S" "%D`
-		upH=$((`date -d "$date2" '+%H'` - `date -d "$date1" '+%H'`))
-		upM=$((`date -d "$date2" '+%M'` - `date -d "$date1" '+%M'`))
-		upS=$((`date -d "$date2" '+%S'` - `date -d "$date1" '+%S'`))
+		upS=$((`date -d "$date2" '+%s'` - `date -d "$date1" '+%s'`))
 	fi 
 }
 
-imprintC(){
-	echo "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has connected." >> $path2/nfs.log
-}
-
-imprintD(){
-	uptime
-	echo "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has disconnected. Uptime was ${upH}:${upM}:${upS}" >> $path2/nfs.log
-}
 readConf
 case "$1" in
 	start)	
 		rm -rf $path2
 		mkdir $path2
 		sudo mount -t nfs ${address}:${path1} ${path2}
-		imprintC
+		sudo echo -e "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has connected." >> ${path2}/nfs.log
 		;;
 	stop)	
-		imprintD
+		uptime
+		sudo echo -e "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has disconnected. Uptime was ${upS} sec" >> ${path2}/nfs.log
 		sudo umount -l $path2
         ;;
 	restart) 
 		$0 stop
-		$0 startc
+		$0 start
         ;;
 	settings)
 		insConf
