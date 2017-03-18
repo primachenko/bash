@@ -5,8 +5,8 @@ if [ true != "$INIT_D_SCRIPT_SOURCED" ] ; then
 fi
 ### BEGIN INIT INFO
 # Provides:          nfsDaemon
-# Required-Start:    $remote_fs $network
-# Required-Stop:     $remote_fs $network
+# Required-Start:    $all
+# Required-Stop:     $all
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Example initscript
@@ -19,35 +19,71 @@ fi
 ### END INIT INFO
 
 readConf(){
-	if [ -f /home/oleg/var/conf ]
+	if [ -f /etc/conf ]
 	then
-		address=`sed -n 1p /home/oleg/var/conf`
-		path1=`sed -n 2p  /home/oleg/var/conf`
-		path2=`sed -n 3p  /home/oleg/var/conf`
+		address=`sed -n 1p /etc/conf`
+		path1=`sed -n 2p  /etc/conf`
+		path2=`sed -n 3p  /etc/conf`
+		name=`sed -n 4p  /etc/conf`
 	else
 		address=""
 		path1=""
 		path2=""
+		name=""
+		touch /etc/conf
+		chmod 777 /etc/conf
 		insConf
-	fi	
+	fi
 }
 
 insConf(){
+	name1=$(whiptail --title "settings" --inputbox "Введите свое имя" 10 60 $name 3>&1 1>&2 2>&3)
 	IP=$(whiptail --title "settings" --inputbox "Введите IP сервера" 10 60 $address 3>&1 1>&2 2>&3)
 	pathServ=$(whiptail --title "settings" --inputbox "Введите путь к общедоступной папке" 10 60 $path1 3>&1 1>&2 2>&3)
 	pathLocal=$(whiptail --title "settings" --inputbox "Введите точку монтирования" 10 60 $path2 3>&1 1>&2 2>&3)
-	echo "$IP\n$pathServ\n$pathLocal">/home/oleg/var/conf
+	echo "$IP\n$pathServ\n$pathLocal\n$name1">/etc/conf
+}
+
+timeConv(){
+	day=$(( $upS / 86400 ))
+	upS=$(( $upS - ${day}*86400 ))
+	hours=$(( $upS / 3600 ))
+	upS=$(( $upS - ${hours}*3600 ))
+	min=$(( $upS / 60 ))
+	upS=$(( $upS - ${min}*60 ))
+	if [ $day -eq 0 ]
+		then
+		day=""
+	else
+		day=$day" day(s) "
+	fi	
+	if [ $hours -eq 0 ]
+		then
+		hours=""
+	else
+		hours=$hours" hour(s) "
+	fi		
+	if [ $min -eq 0 ]
+		then
+		min=""
+	else
+		min=$min" min "
+	fi		
+	upS=$upS" sec"
+	ans=${day}${hours}${min}${upS}
 }
 
 uptime(){
 	if !([ -f $path2/nfs.log ])
 	then
 		touch $path2/nfs.log
-		upS="NaN"
+		chmod 777 $path2/nfs.log
+		ans="NaN"
 	else
 		date1=`cat $path2/nfs.log | grep ':' | tail -1 | sed -n 1p`
 		date2=`date +%H":"%M":"%S" "%D`
 		upS=$((`date -d "$date2" '+%s'` - `date -d "$date1" '+%s'`))
+		timeConv
 	fi 
 }
 
@@ -57,11 +93,11 @@ case "$1" in
 		rm -rf $path2
 		mkdir $path2
 		sudo mount -t nfs ${address}:${path1} ${path2}
-		echo "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has connected." >> ${path2}/nfs.log
+		echo "`date +%H":"%M":"%S" "%D`\nThe $name with the address $address has connected." >> ${path2}/nfs.log
 		;;
 	stop)	
 		uptime
-		echo "`date +%H":"%M":"%S" "%D`\nThe $USER with the address $address has disconnected. Uptime was ${upS} sec" >> ${path2}/nfs.log
+		echo "`date +%H":"%M":"%S" "%D`\nThe $name with the address $address has disconnected. Uptime was $ans" >> ${path2}/nfs.log
 		sudo umount -l $path2
         ;;
 	restart) 
