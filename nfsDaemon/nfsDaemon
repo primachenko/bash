@@ -19,6 +19,7 @@ fi
 ### END INIT INFO
 
 readConf(){
+		
 	if [ -f /etc/conf ]
 	then
 		address=`sed -n 1p /etc/conf`
@@ -30,75 +31,95 @@ readConf(){
 		path1=""
 		path2=""
 		name=""
-		touch /etc/conf
-		chmod 777 /etc/conf
+		sudo touch /etc/conf
+		sudo chmod o+w /etc/conf
 		insConf
+	fi
+	
+	if [ $address=="localhost" ]
+	then
+		usrIP="localhost"
+	else
+		usrIP=`ip addr list wlo1 | grep "  inet " | head -n 1 | cut -d " " -f 6 | cut -d / -f 1`
 	fi
 }
 
 insConf(){
-	name1=$(whiptail --title "settings" --inputbox "Введите свое имя" 10 60 $name 3>&1 1>&2 2>&3)
+	usrname=$(whiptail --title "settings" --inputbox "Введите свое имя" 10 60 $name 3>&1 1>&2 2>&3)
 	IP=$(whiptail --title "settings" --inputbox "Введите IP сервера" 10 60 $address 3>&1 1>&2 2>&3)
 	pathServ=$(whiptail --title "settings" --inputbox "Введите путь к общедоступной папке" 10 60 $path1 3>&1 1>&2 2>&3)
 	pathLocal=$(whiptail --title "settings" --inputbox "Введите точку монтирования" 10 60 $path2 3>&1 1>&2 2>&3)
-	echo "$IP\n$pathServ\n$pathLocal\n$name1">/etc/conf
+	
+	echo "$IP\n$pathServ\n$pathLocal\n$usrname">/etc/conf
 }
 
 timeConv(){
-	day=$(( $upS / 86400 ))
-	upS=$(( $upS - ${day}*86400 ))
-	hours=$(( $upS / 3600 ))
-	upS=$(( $upS - ${hours}*3600 ))
-	min=$(( $upS / 60 ))
-	upS=$(( $upS - ${min}*60 ))
+	day=$(( $sec / 86400 ))
+	sec=$(( $sec - ${day}*86400 ))
+	hour=$(( $sec / 3600 ))
+	sec=$(( $sec - ${hour}*3600 ))
+	min=$(( $sec / 60 ))
+	sec=$(( $sec - ${min}*60 ))
+	
 	if [ $day -eq 0 ]
 		then
 		day=""
 	else
 		day=$day" day(s) "
-	fi	
-	if [ $hours -eq 0 ]
+	fi
+		
+	if [ $hour -eq 0 ]
 		then
-		hours=""
+		hour=""
 	else
-		hours=$hours" hour(s) "
-	fi		
+		hour=$hour" hour(s) "
+	fi
+			
 	if [ $min -eq 0 ]
 		then
 		min=""
 	else
 		min=$min" min "
 	fi		
-	upS=$upS" sec"
-	ans=${day}${hours}${min}${upS}
+	sec=$sec" sec"
+	
+	ans=${day}${hour}${min}${sec}
 }
 
 uptime(){
 	if !([ -f $path2/nfs.log ])
 	then
 		touch $path2/nfs.log
-		chmod 777 $path2/nfs.log
+		chmod o+w $path2/nfs.log
 		ans="NaN"
 	else
 		date1=`cat $path2/nfs.log | grep ':' | tail -1 | sed -n 1p`
 		date2=`date +%H":"%M":"%S" "%D`
-		upS=$((`date -d "$date2" '+%s'` - `date -d "$date1" '+%s'`))
+		sec=$((`date -d "$date2" '+%s'` - `date -d "$date1" '+%s'`))
 		timeConv
 	fi 
 }
 
 readConf
+
 case "$1" in
 	start)	
 		rm -rf $path2
 		mkdir $path2
+		chmod o+w $path2
+		touch $path2/nfs.log
+		chmod o+w $path2/nfs.log
 		sudo mount -t nfs ${address}:${path1} ${path2}
-		echo "`date +%H":"%M":"%S" "%D`\nThe $name with the address $address has connected." >> ${path2}/nfs.log
+		
+		echo "`date +%H":"%M":"%S" "%D`\nThe $name with the address $usrIP has connected." >> ${path2}/nfs.log
 		;;
 	stop)	
 		uptime
-		echo "`date +%H":"%M":"%S" "%D`\nThe $name with the address $address has disconnected. Uptime was $ans" >> ${path2}/nfs.log
+		echo "`date +%H":"%M":"%S" "%D`\nThe $name with the address $usrIP has disconnected. Uptime was $ans" >> ${path2}/nfs.log
+		
 		sudo umount -l $path2
+		rm -rf $path2
+		mkdir $path2
         ;;
 	restart) 
 		$0 stop
