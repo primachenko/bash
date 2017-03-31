@@ -20,10 +20,12 @@ readConfig(){
 }
 
 copy(){
-	copy_path=$local_path/$(date +%H':'%M'_'%d'-'%m'-'%y)
+	time_name=$(date +%H'-'%M'_'%d'-'%m'-'%y)
+	copy_path=$local_path/$time_name
 	mkdir $copy_path
 	rsync -az -e "ssh -p 22" --progress $user@$host:$remote_path* $copy_path
-	tar -cvzpf $copy_path.tar.gz $copy_path
+	cd $local_path
+	tar -cf $time_name.tar.gz $time_name
 	rm -r $copy_path
 }
  
