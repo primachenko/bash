@@ -36,12 +36,8 @@ readConf(){
 		insConf
 	fi
 	
-	if [ $address=="localhost" ]
-	then
-		usrIP="localhost"
-	else
-		usrIP=`ip addr list wlo1 | grep "  inet " | head -n 1 | cut -d " " -f 6 | cut -d / -f 1`
-	fi
+	usrIP=`ip addr list wlo1 | grep "  inet " | head -n 1 | cut -d " " -f 6 | cut -d / -f 1`
+	
 }
 
 insConf(){
@@ -110,13 +106,11 @@ case "$1" in
 		touch $path2/nfs.log
 		chmod o+w $path2/nfs.log
 		sudo mount -t nfs ${address}:${path1} ${path2}
-		
 		echo "`date +%H":"%M":"%S" "%D`\nThe $name with the address $usrIP has connected." >> ${path2}/nfs.log
 		;;
 	stop)	
 		uptime
 		echo "`date +%H":"%M":"%S" "%D`\nThe $name with the address $usrIP has disconnected. Uptime was $ans" >> ${path2}/nfs.log
-		
 		sudo umount -l $path2
 		rm -rf $path2
 		mkdir $path2
