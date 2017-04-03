@@ -7,19 +7,18 @@ setStaticRules(){
 	sudo ufw allow ftp
 	sudo ufw allow 3306
 }
+#sdhdsgfjhwe
 
 check(){
 	echo 0
 }
 
 scan(){
-	netstat -l | grep LISTENING | awk '{ print $8 }' > temp #; echo "EOF" >> temp
-	netstat -l | grep LISTENING | awk '{ print $9 }' > temp2
+	netstat -anltp | grep "LISTEN" | awk '{print($4)}' | sed 's|.*:::||' | sed 's|.*:||' > temp
 }
 
 setRulesFromFile(){
 	touch temp
-	touch temp2
 	act="allow"
 	i=1
 	var=""
@@ -28,18 +27,16 @@ setRulesFromFile(){
 		if test $act="allow"
 			then
 			echo -e "\n"
-			echo $(sed -n ${i}p temp2)
-			echo "allow $(sed -n ${i}p temp)"
+			echo "allow port $(sed -n ${i}p temp)"
 			sudo ufw allow $(sed -n ${i}p temp)
 		else
 			echo -e "\n"
-			echo $(sed -n ${i}p temp2)
-			echo "deny $(sed ${i}p temp)"
+			echo "deny port $(sed ${i}p temp)"
 			sudo ufw deny $(sed ${i}p temp)
 		fi		
 		let i=i+1
 	done
-	rm temp 
+	rm temp
 }
 clearRules(){
 	sudo ufw reset
